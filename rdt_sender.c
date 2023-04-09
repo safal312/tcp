@@ -13,6 +13,7 @@
 
 #include"packet.h"
 #include"common.h"
+#include"linked_list.h"
 
 #define STDIN_FD    0
 #define RETRY  120 //millisecond
@@ -28,6 +29,8 @@ tcp_packet *sndpkt;
 tcp_packet *recvpkt;
 sigset_t sigmask;       
 
+// struct node* head = NULL;
+// struct node* tail = NULL;
 
 void resend_packets(int sig)
 {
@@ -78,6 +81,12 @@ void init_timer(int delay, void (*sig_handler)(int))
 
 int main (int argc, char **argv)
 {
+    // printf("hereee");
+    insert_last(NULL, 0);
+    insert_last(NULL, 155);
+    print_backwards();
+    fflush(stdout);
+    return 0;
     int portno, len;
     int next_seqno;
     char *hostname;

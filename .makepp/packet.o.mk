@@ -1,0 +1,15 @@
+IMPLICIT_DEPS=
+CWD=.
+META_DEPS=/usr/bin/gccpacket.csysstdlib.huser./packet.h
+SIG_METHOD_IMPLICIT=1
+IMPLICIT_TARGETS=packet.o
+ARCH=x86_64-linux-gnu-thread-multi
+COMMAND=gcc -c -Wall -I.  -c packet.c -o packet.o
+DEP_SIGS=1651350594,862976tNcp7pyMUtaQ4k9RqfRNoQyHIWcFkDSHGm21u9xogXCA1657149803,36393
+SIGNATURE=1681035453,1656
+INCLUDE_SFXS=
+SORTED_DEPS=/usr/bin/gccpacket.cpacket.h/usr/include/stdlib.h
+SIG_METHOD_NAME=C
+BUILD_SIGNATURE=1681035453,1656
+INCLUDE_PATHS=sys./usr/local/include/usr/includeuser./usr/local/include/usr/include
+END=

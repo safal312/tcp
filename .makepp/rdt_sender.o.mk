@@ -1,0 +1,15 @@
+IMPLICIT_DEPS=
+CWD=.
+META_DEPS=/usr/bin/gccrdt_sender.csysarpa/inet.hassert.hnetinet/in.hsignal.hstdio.hstdlib.hstring.hsys/socket.hsys/time.hsys/types.htime.hunistd.huser./common.hpacket.h
+SIG_METHOD_IMPLICIT=1
+IMPLICIT_TARGETS=rdt_sender.o
+ARCH=x86_64-linux-gnu-thread-multi
+COMMAND=gcc -c -Wall -I.  -c rdt_sender.c -o rdt_sender.o
+SIGNATURE=1681035453,7928
+DEP_SIGS=1657149803,4643Pv/zQw8Oxzrm5yWJ9PQcxw1651350594,8629761657149803,220411657149803,4334yHIWcFkDSHGm21u9xogXCAemL5XArl4DH/mCT5WikYLw1657149803,130401657149803,311761657149803,363931657149803,194591657149803,148391657149803,44967
+INCLUDE_SFXS=
+SORTED_DEPS=/usr/include/assert.hcommon.h/usr/bin/gcc/usr/include/netinet/in.h/usr/include/arpa/inet.hpacket.hrdt_sender.c/usr/include/signal.h/usr/include/stdio.h/usr/include/stdlib.h/usr/include/string.h/usr/include/time.h/usr/include/unistd.h
+SIG_METHOD_NAME=C
+BUILD_SIGNATURE=1681035453,7928
+INCLUDE_PATHS=sys./usr/local/include/usr/includeuser./usr/local/include/usr/include
+END=

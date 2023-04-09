@@ -1,0 +1,179 @@
+3/usr/bin/makepp rdt_sender rdt_receiver
+VERSION2.0.98.55.34.0x86_64-linux-gnu-thread-multi
+DEBUG0
+LOAD55b1d0a81e38Makefile55b1d02a6e08/home/safal/Desktop/Projects/networks/tcp55b1d02a6e08
+TRY55b1d0a81e38
+USEdefault rule
+DEPEND55b1d0a81e38
+UP_TO_DATE55b1d0a81e38
+LOAD_INCL55b1d0a9ced0makepp_builtin_rules.mk55b1d0083cb0/usr/share/makepp55b1d0a81e38
+LOAD_END55b1d0a81e38
+TRY55b1d0a7fc40rdt_sender55b1d02a6e08
+USE/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+INFER_SEED55b1d0ab67e8rdt_sender.o55b1d02a6e08
+PREBUILD55b1d0ab67e8/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+TRY55b1d0ab67e8
+USE/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)
+SCAN_INFO55b1d0ab67e8
+LEX_RULE55b1d0ab67e8info not cached
+PARSEgcc -c -Wall -I.  -c rdt_sender.c -o rdt_sender.o55b1d02a6e08/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)
+LOAD_DEFAULT55b1d0af7690bin55b1d0af1a20/home/safal/.local
+LOAD_INCL55b1d0a9ced055b1d0b09ba8makepp_default_makefile.mk55b1d0083cb0
+LOAD_END55b1d0b09ba8
+TRY55b1d0b024a0gcc55b1d0b01f60/usr/bin
+USEdefault rule
+DEPEND55b1d0b024a0
+UP_TO_DATE55b1d0b024a0
+TRY55b1d0aa2770rdt_sender.c55b1d02a6e08
+USEdefault rule
+DEPEND55b1d0aa2770
+UP_TO_DATE55b1d0aa2770
+INCL55b1d0aa277055b1d0a978e8common.h55b1d02a6e08
+TRY55b1d0a978e8
+USEdefault rule
+DEPEND55b1d0a978e8
+UP_TO_DATE55b1d0a978e8
+INCL55b1d0aa277055b1d0a97978packet.h55b1d02a6e08
+TRY55b1d0a97978
+USEdefault rule
+DEPEND55b1d0a97978
+UP_TO_DATE55b1d0a97978
+INCL55b1d0aa277055b1d0b4dbc0inet.h55b1d0b35540/usr/include/arpa
+TRY55b1d0b4dbc0
+USEdefault rule
+DEPEND55b1d0b4dbc0
+UP_TO_DATE55b1d0b4dbc0
+INCL55b1d0aa277055b1d0b76100assert.h55b1d0b4da28/usr/include
+TRY55b1d0b76100
+USEdefault rule
+DEPEND55b1d0b76100
+UP_TO_DATE55b1d0b76100
+INCL55b1d0aa277055b1d0b62fc8in.h55b1d0b7d0c0/usr/include/netinet
+TRY55b1d0b62fc8
+USEdefault rule
+DEPEND55b1d0b62fc8
+UP_TO_DATE55b1d0b62fc8
+INCL55b1d0aa277055b1d006b810signal.h55b1d0b4da28
+TRY55b1d006b810
+USEdefault rule
+DEPEND55b1d006b810
+UP_TO_DATE55b1d006b810
+INCL55b1d0aa277055b1d0b75920stdio.h55b1d0b4da28
+TRY55b1d0b75920
+USEdefault rule
+DEPEND55b1d0b75920
+UP_TO_DATE55b1d0b75920
+INCL55b1d0aa277055b1d0b81568stdlib.h55b1d0b4da28
+TRY55b1d0b81568
+USEdefault rule
+DEPEND55b1d0b81568
+UP_TO_DATE55b1d0b81568
+INCL55b1d0aa277055b1d0b75800string.h55b1d0b4da28
+TRY55b1d0b75800
+USEdefault rule
+DEPEND55b1d0b75800
+UP_TO_DATE55b1d0b75800
+INCL55b1d0aa277055b1d0b7ca90time.h55b1d0b4da28
+TRY55b1d0b7ca90
+USEdefault rule
+DEPEND55b1d0b7ca90
+UP_TO_DATE55b1d0b7ca90
+INCL55b1d0aa277055b1d0b84f08unistd.h55b1d0b4da28
+TRY55b1d0b84f08
+USEdefault rule
+DEPEND55b1d0b84f08
+UP_TO_DATE55b1d0b84f08
+DEPEND55b1d0ab67e855b1d0b7610055b1d0a978e855b1d0b024a055b1d0b62fc855b1d0b4dbc055b1d0a9797855b1d0aa277055b1d006b81055b1d0b7592055b1d0b8156855b1d0b7580055b1d0b7ca9055b1d0b84f08
+BUILD_NONE55b1d0ab67e8
+SUCCESS/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)55b1d0ab67e8
+INFER_DEP55b1d0ab4ab8common.o55b1d02a6e08common.h
+INFER_DEP55b1d0ab5760packet.o55b1d02a6e08packet.h
+PREBUILD55b1d0ab4ab8/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+TRY55b1d0ab4ab8
+USE/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)
+SCAN_INFO55b1d0ab4ab8
+LEX_RULE55b1d0ab4ab8info not cached
+PARSEgcc -c -Wall -I.  -c common.c -o common.o55b1d02a6e08/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)
+TRY55b1d0aa2800common.c55b1d02a6e08
+USEdefault rule
+DEPEND55b1d0aa2800
+UP_TO_DATE55b1d0aa2800
+INCL55b1d0aa280055b1d0a978e8
+INCL55b1d0aa280055b1d0b75920
+INCL55b1d0aa280055b1d0b81568
+DEPEND55b1d0ab4ab855b1d0aa280055b1d0a978e855b1d0b024a055b1d0b7592055b1d0b81568
+BUILD_NONE55b1d0ab4ab8
+SUCCESS/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)55b1d0ab4ab8
+PREBUILD55b1d0ab5760/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+TRY55b1d0ab5760
+USE/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)
+SCAN_INFO55b1d0ab5760
+LEX_RULE55b1d0ab5760info not cached
+PARSEgcc -c -Wall -I.  -c packet.c -o packet.o55b1d02a6e08/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)
+TRY55b1d0aa2a40packet.c55b1d02a6e08
+USEdefault rule
+DEPEND55b1d0aa2a40
+UP_TO_DATE55b1d0aa2a40
+INCL55b1d0aa2a4055b1d0b81568
+INCL55b1d0aa2a4055b1d0a97978
+DEPEND55b1d0ab576055b1d0b024a055b1d0aa2a4055b1d0a9797855b1d0b81568
+BUILD_NONE55b1d0ab5760
+SUCCESS/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)55b1d0ab5760
+PREBUILD55b1d0ab67e8/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+PREBUILD55b1d0ab4ab8/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+PREBUILD55b1d0ab5760/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+SCAN_INFO55b1d0a7fc40
+LEX_RULE55b1d0a7fc40info not cached
+PARSEgcc -c rdt_sender.o common.o packet.o    -o rdt_sender55b1d02a6e08/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+DEPEND55b1d0a7fc4055b1d0ab4ab855b1d0b024a055b1d0ab576055b1d0ab67e8
+BUILD_NONE55b1d0a7fc40
+SUCCESS/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)55b1d0a7fc40
+*** warning: I attempted to build /home/safal/Desktop/Projects/networks/tcp/rdt_sender,
+  but after successfully executing the commands, the target does not exist.
+  Perhaps it is a phony target?	 If so, the rule defining it should be modified
+  like this:
+    $(phony rdt_sender): dependencies
+	actions
+
+  or you could also declare it as phony like this:
+    .PHONY: rdt_sender
+TRY55b1d0083098rdt_receiver55b1d02a6e08
+USE/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+INFER_SEED55b1d0ab64b8rdt_receiver.o55b1d02a6e08
+PREBUILD55b1d0ab64b8/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+TRY55b1d0ab64b8
+USE/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)
+SCAN_INFO55b1d0ab64b8
+LEX_RULE55b1d0ab64b8info not cached
+PARSEgcc -c -Wall -I.  -c rdt_receiver.c -o rdt_receiver.o55b1d02a6e08/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)
+TRY55b1d0a97a08rdt_receiver.c55b1d02a6e08
+USEdefault rule
+DEPEND55b1d0a97a08
+UP_TO_DATE55b1d0a97a08
+INCL55b1d0a97a0855b1d0b75920
+INCL55b1d0a97a0855b1d0b84f08
+INCL55b1d0a97a0855b1d0b81568
+INCL55b1d0a97a0855b1d0b75800
+INCL55b1d0a97a0855b1d0b62fc8
+INCL55b1d0a97a0855b1d0b4dbc0
+INCL55b1d0a97a0855b1d0b76100
+INCL55b1d0a97a0855b1d0a978e8
+INCL55b1d0a97a0855b1d0a97978
+DEPEND55b1d0ab64b855b1d0b7610055b1d0a978e855b1d0b024a055b1d0b62fc855b1d0b4dbc055b1d0a9797855b1d0a97a0855b1d0b7592055b1d0b8156855b1d0b7580055b1d0b84f08
+BUILD_NONE55b1d0ab64b8
+SUCCESS/usr/share/makepp/makepp_builtin_rules.mk:97(/home/safal/Desktop/Projects/networks/tcp)55b1d0ab64b8
+INFER_DEP55b1d0ab4ab8common.h
+INFER_DEP55b1d0ab5760packet.h
+PREBUILD55b1d0ab4ab8/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+PREBUILD55b1d0ab5760/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+PREBUILD55b1d0ab64b8/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+PREBUILD55b1d0ab4ab8/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+PREBUILD55b1d0ab5760/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+SCAN_INFO55b1d0083098
+LEX_RULE55b1d0083098info not cached
+PARSEgcc -c rdt_receiver.o common.o packet.o    -o rdt_receiver55b1d02a6e08/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)
+DEPEND55b1d008309855b1d0ab4ab855b1d0b024a055b1d0ab576055b1d0ab64b8
+BUILD_NONE55b1d0083098
+SUCCESS/usr/share/makepp/makepp_builtin_rules.mk:78(/home/safal/Desktop/Projects/networks/tcp)55b1d0083098
+*** warning: Target /home/safal/Desktop/Projects/networks/tcp/rdt_receiver is probably also phony.
+N_FILES420

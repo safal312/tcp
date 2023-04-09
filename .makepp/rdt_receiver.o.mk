@@ -1,0 +1,15 @@
+BUILD_SIGNATURE=1681035453,4952
+INCLUDE_PATHS=sys./usr/local/include/usr/includeuser./usr/local/include/usr/include
+SORTED_DEPS=/usr/include/assert.hcommon.h/usr/bin/gcc/usr/include/netinet/in.h/usr/include/arpa/inet.hpacket.hrdt_receiver.c/usr/include/stdio.h/usr/include/stdlib.h/usr/include/string.h/usr/include/unistd.h
+SIG_METHOD_NAME=C
+INCLUDE_SFXS=
+META_DEPS=/usr/bin/gccrdt_receiver.csysarpa/inet.hassert.hnetinet/in.hstdio.hstdlib.hstring.hsys/socket.hsys/time.hsys/types.hunistd.huser./common.hpacket.h
+ARCH=x86_64-linux-gnu-thread-multi
+SIGNATURE=1681035453,4952
+COMMAND=gcc -c -Wall -I.  -c rdt_receiver.c -o rdt_receiver.o
+DEP_SIGS=1657149803,4643Pv/zQw8Oxzrm5yWJ9PQcxw1651350594,8629761657149803,220411657149803,4334yHIWcFkDSHGm21u9xogXCAq9FYNBxj+gB72r5OVJTVJA1657149803,311761657149803,363931657149803,194591657149803,44967
+IMPLICIT_TARGETS=rdt_receiver.o
+SIG_METHOD_IMPLICIT=1
+IMPLICIT_DEPS=
+CWD=.
+END=
