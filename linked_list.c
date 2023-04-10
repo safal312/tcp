@@ -9,45 +9,56 @@
 struct node* head = NULL;
 struct node* tail = NULL;
 
+// void init_list() {
+//     struct node* head = (struct node*) malloc(sizeof(struct node));
+//     head->key = NULL;
+//     head->prev = NULL;
+
+//     struct node* tail = (struct node*) malloc(sizeof(struct node));
+//     tail->key = NULL;
+//     tail->next = NULL;
+//     tail->prev = head;
+//     tail->next = NULL;
+// }
+
 void insert_last(tcp_packet* packet, int seq_num) {
     struct node* new_node = (struct node*) malloc(sizeof(struct node));
     new_node->packet = packet;
     new_node->key = seq_num;
+    new_node->next = NULL;
 
-    if (tail == NULL) {
-        tail = new_node;
-    } else {
-        tail->next = new_node;
-        new_node->prev = tail;
+    if (head == NULL) {
+        head = tail = new_node;
+        return;
     }
-    
+
+    tail->next = new_node;
     tail = new_node;
 }
 
 void remove_first() {
-    // struct node* temp = head;
+    if (head == NULL) return;
+    struct node* temp = head;
 
     if (head->next==NULL) {
         tail = NULL;
-    } else {
-        free(head->next->prev);
-        head->next->prev = NULL;
     }
     
     head = head->next;
+    free(temp);
 }
 
-void print_backwards() {
-    struct node* current = tail;
+void print_list() {
+    struct node* current = head;
 
-    if (tail == NULL) {
+    if (head == NULL) {
         printf("Empty List");
         return;
     }
 
     while (current != NULL) {
         printf("%d->", current->key);
-        current = current->prev;
+        current = current->next;
     }
     printf("NULL\n");
 }
