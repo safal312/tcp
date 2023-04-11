@@ -24,6 +24,8 @@ tcp_packet *sndpkt;
 
 linked_list* pktbuffer;
 
+int expected_seqno = 0;
+
 int main(int argc, char **argv) {
     linked_list* pktbuffer = (linked_list*) malloc(sizeof(linked_list));
     int sockfd; /* socket */
@@ -97,23 +99,54 @@ int main(int argc, char **argv) {
             error("ERROR in recvfrom");
         }
         recvpkt = (tcp_packet *) buffer;
-        insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
+        // if (!isEmpty(pktbuffer)) {
+        //     insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
+        // }
+        
         assert(get_data_size(recvpkt) <= DATA_SIZE);
         if ( recvpkt->hdr.data_size == 0) {
             //VLOG(INFO, "End Of File has been reached");
             fclose(fp);
             break;
-        }   
+        }
+
         /* 
          * sendto: ACK back to the client 
          */
+
         gettimeofday(&tp, NULL);
         VLOG(DEBUG, "%lu, %d, %d", tp.tv_sec, recvpkt->hdr.data_size, recvpkt->hdr.seqno);
+        
+        insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
+        // print_list(pktbuffer);
 
-        fseek(fp, recvpkt->hdr.seqno, SEEK_SET);
-        fwrite(recvpkt->data, 1, recvpkt->hdr.data_size, fp);
+        // print_list(pktbuffer);
+
+        if (recvpkt->hdr.seqno == expected_seqno) {
+            struct node* current = pktbuffer->head;
+
+            while (current != NULL) {
+                struct node* next_node = current->next;
+                int next_seq = current->key + current->packet->hdr.data_size;
+
+                if (current->key == expected_seqno) {
+                    fseek(fp, recvpkt->hdr.seqno, SEEK_SET);
+                    fwrite(recvpkt->data, 1, recvpkt->hdr.data_size, fp);
+                    remove_first(pktbuffer);
+                } else {
+                    break;
+                }
+                
+                expected_seqno = next_seq;
+                current = next_node;
+            }
+        }
+
+        // print_list(pktbuffer);
+
         sndpkt = make_packet(0);
-        sndpkt->hdr.ackno = recvpkt->hdr.seqno + recvpkt->hdr.data_size;
+        
+        sndpkt->hdr.ackno = expected_seqno;
         sndpkt->hdr.ctr_flags = ACK;
         if (sendto(sockfd, sndpkt, TCP_HDR_SIZE, 0, 
                 (struct sockaddr *) &clientaddr, clientlen) < 0) {

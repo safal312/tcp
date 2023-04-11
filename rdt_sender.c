@@ -20,7 +20,7 @@
 
 int next_seqno=0;
 int send_base=0;
-int window_size = 10;       // changed from 1 to 10
+int MAX_WINDOW = 10;       // changed from 1 to 10
 
 int sockfd, serverlen;
 struct sockaddr_in serveraddr;
@@ -134,6 +134,8 @@ int main (int argc, char **argv)
 
     while (1)
     {   
+        int pktbufferlength = get_length(pktbuffer);
+        int window_size = MAX_WINDOW - pktbufferlength;
         for (int i = 0; i < window_size; i++) {
 
             len = fread(buffer, 1, DATA_SIZE, fp);
@@ -146,24 +148,30 @@ int main (int argc, char **argv)
                 return 0;
                 // break;
             }
-            send_base = next_seqno;
-            next_seqno = send_base + len;
+            int start_byte = next_seqno;
+            next_seqno = start_byte + len;
             sndpkt = make_packet(len);
             memcpy(sndpkt->data, buffer, len);
-            sndpkt->hdr.seqno = send_base;
-            insert_last(pktbuffer, sndpkt, send_base);         // insert the packet into the linked list
+            sndpkt->hdr.seqno = start_byte;
+            insert_last(pktbuffer, sndpkt, next_seqno);         // insert the packet into the linked list
         }
     
         //Wait for ACK
-        do {
+        // do {
             struct node* head = get_head(pktbuffer);
             struct node* current = head;
 
             start_timer();
+            print_list(pktbuffer);
+
+            // skip already sent pkts
+            for (int i = 0; i < pktbufferlength; i++) {
+                current = current->next;
+            }
 
             while (current != NULL) {
                 tcp_packet* cur_pkt = current->packet;
-                int cur_seq = current->key;
+                int cur_seq = cur_pkt->hdr.seqno;
                 VLOG(DEBUG, "Sending packet %d to %s", 
                     cur_seq, inet_ntoa(serveraddr.sin_addr));
                 /*
@@ -172,6 +180,7 @@ int main (int argc, char **argv)
                 * response to the src port.
                 */
                 
+                // don't send pkts that are already sent
                 if(sendto(sockfd, cur_pkt, TCP_HDR_SIZE + get_data_size(cur_pkt), 0, 
                             ( const struct sockaddr *)&serveraddr, serverlen) < 0)
                 {
@@ -182,6 +191,8 @@ int main (int argc, char **argv)
 
             //ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
             //struct sockaddr *src_addr, socklen_t *addrlen);
+            
+            int move_window = 0;
 
             do
             {
@@ -192,14 +203,27 @@ int main (int argc, char **argv)
                 }
 
                 recvpkt = (tcp_packet *)buffer;
-                printf("%d \n", get_data_size(recvpkt));
+                // printf("%d \n", get_data_size(recvpkt));
+                printf("Acknowledgement Number: %d\n", recvpkt->hdr.ackno);
+                
                 assert(get_data_size(recvpkt) <= DATA_SIZE);
 
-                // int ackno = recvpkt->hdr.ackno;
-            }while(recvpkt->hdr.ackno < next_seqno);    //ignore duplicate ACKs
+                int ackno = recvpkt->hdr.ackno;
+                if (ackno > send_base) {
+                    send_base = ackno;
+                    ack_pkt(pktbuffer, ackno);
+                    move_window = slide_acked(pktbuffer);       // slide window if possible
+
+                    // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
+                    if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();
+                }
+            }while(!move_window && recvpkt->hdr.ackno < next_seqno);    //ignore duplicate ACKs
             stop_timer();
+            print_list(pktbuffer);
+            
+            // if (move_window) break;
             /*resend pack if don't recv ACK */
-        } while(recvpkt->hdr.ackno != next_seqno);      
+        // } while(recvpkt->hdr.ackno != next_seqno);      
 
         free(sndpkt);
     }

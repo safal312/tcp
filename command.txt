@@ -1,3 +1,6 @@
 mm-delay 5 mm-loss uplink 0.2 mm-loss downlink 0.5
 
 ./obj/rdt_sender $MAHIMAHI_BASE 5454 Sample.txt
+
+
+./obj/rdt_receiver 5454 receiver.txt

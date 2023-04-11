@@ -10,6 +10,7 @@ void insert_seq(linked_list* list, tcp_packet* packet, int seq_num) {
     struct node* new_node = (struct node*) malloc(sizeof(struct node));
     new_node->packet = packet;
     new_node->key = seq_num;
+    new_node->ack = 0;
     new_node->next = NULL;
 
     struct node* current = list->head;
@@ -17,14 +18,7 @@ void insert_seq(linked_list* list, tcp_packet* packet, int seq_num) {
     if (current == NULL) {
         list->head = list->tail = new_node;
         return;
-    } else if (current == list->tail) {             // case for 1 node
-        if (current->key < seq_num) {
-            list->tail = new_node;
-        } else {
-            list->head = new_node;
-        }
-        list->head->next = list->tail;
-    }
+    } 
 
     // iterate over each node
     // if next node's key value is greater than packet's seq num
@@ -33,7 +27,7 @@ void insert_seq(linked_list* list, tcp_packet* packet, int seq_num) {
     
     struct node* prev = current;
     // struct node* current = current->next;
-    while (current->next != NULL) {
+    while (current != NULL) {
         if (current->key >= seq_num) {
             new_node->next = current;
             if (current == list->head) {
@@ -56,6 +50,7 @@ void insert_last(linked_list* list, tcp_packet* packet, int seq_num) {
     struct node* new_node = (struct node*) malloc(sizeof(struct node));
     new_node->packet = packet;
     new_node->key = seq_num;
+    new_node->ack = 0;
     new_node->next = NULL;
 
     if (list->head == NULL) {
@@ -91,7 +86,7 @@ void print_list(linked_list* list) {
     }
 
     while (current != NULL) {
-        printf("%d->", current->key);
+        printf("%d->", current->packet->hdr.seqno);
         current = current->next;
     }
     printf("NULL\n");
@@ -101,10 +96,52 @@ struct node* get_head(linked_list* list) {
     return list->head;
 }
 
+int isEmpty(linked_list* list) {
+    return list->head == NULL ? 1 : 0;
+}
+
+void ack_pkt(linked_list* list, int ackno) {
+    struct node* current = list->head;
+
+    while (current != NULL) {
+        current->ack = 1;           // 1 means acked. Cumulatively acked
+        if (current->key == ackno) break;
+        current = current->next;
+    }
+}
+
+int slide_acked(linked_list* list) {
+    struct node* current = list->head;
+
+    int flag = 0;
+    while (current != NULL) {
+        if (current->ack != 1) break;
+        flag = 1;
+
+        struct node* next_node = current->next;
+        free(current);
+        
+        list->head = next_node;
+        current = next_node;
+    }
+    return flag;
+}
+
+int get_length(linked_list* list) {
+    struct node* current = list->head;
+    int len = 0;
+    while (current != NULL) {
+        len += 1;
+        current = current->next;
+    }
+    return len;
+}
+
 void test_list(linked_list* pktbuffer) {
-    insert_last(pktbuffer, NULL, 0);
-    insert_last(pktbuffer, NULL, 100);
-    insert_last(pktbuffer, NULL, 200);
+    insert_seq(pktbuffer, NULL, 0);
+    insert_seq(pktbuffer, NULL, -1);
+    insert_seq(pktbuffer, NULL, 100);
+    insert_seq(pktbuffer, NULL, 200);
     print_list(pktbuffer);
     insert_seq(pktbuffer, NULL, 50);
     print_list(pktbuffer);
