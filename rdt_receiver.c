@@ -11,7 +11,7 @@
 
 #include "common.h"
 #include "packet.h"
-
+#include "linked_list.h"
 
 /*
  * You are required to change the implementation to support
@@ -22,7 +22,10 @@
 tcp_packet *recvpkt;
 tcp_packet *sndpkt;
 
+linked_list* pktbuffer;
+
 int main(int argc, char **argv) {
+    linked_list* pktbuffer = (linked_list*) malloc(sizeof(linked_list));
     int sockfd; /* socket */
     int portno; /* port to listen on */
     int clientlen; /* byte size of client's address */
@@ -94,12 +97,13 @@ int main(int argc, char **argv) {
             error("ERROR in recvfrom");
         }
         recvpkt = (tcp_packet *) buffer;
+        insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
         assert(get_data_size(recvpkt) <= DATA_SIZE);
         if ( recvpkt->hdr.data_size == 0) {
             //VLOG(INFO, "End Of File has been reached");
             fclose(fp);
             break;
-        }
+        }   
         /* 
          * sendto: ACK back to the client 
          */
