@@ -24,7 +24,7 @@ tcp_packet *sndpkt;
 
 linked_list* pktbuffer;
 
-int expected_seqno = 0;
+int expected_seqno = 0;     // do we need to randomize?
 
 int main(int argc, char **argv) {
     linked_list* pktbuffer = (linked_list*) malloc(sizeof(linked_list));
@@ -118,8 +118,6 @@ int main(int argc, char **argv) {
         VLOG(DEBUG, "%lu, %d, %d", tp.tv_sec, recvpkt->hdr.data_size, recvpkt->hdr.seqno);
         
         insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
-        // print_list(pktbuffer);
-
         // print_list(pktbuffer);
 
         if (recvpkt->hdr.seqno == expected_seqno) {

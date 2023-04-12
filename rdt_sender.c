@@ -85,6 +85,7 @@ void init_timer(int delay, void (*sig_handler)(int))
 
 int main (int argc, char **argv)
 {
+    // linked list to store packets
     pktbuffer = (linked_list*) malloc(sizeof(linked_list));
 
     int portno, len;
@@ -135,8 +136,9 @@ int main (int argc, char **argv)
     while (1)
     {   
         int pktbufferlength = get_length(pktbuffer);
-        int window_size = MAX_WINDOW - pktbufferlength;
-        for (int i = 0; i < window_size; i++) {
+        int free_space = MAX_WINDOW - pktbufferlength;
+        // printf("Next seq no: %d\n", next_seqno);
+        for (int i = 0; i < free_space; i++) {
 
             len = fread(buffer, 1, DATA_SIZE, fp);
             if ( len <= 0)
@@ -150,12 +152,14 @@ int main (int argc, char **argv)
             }
             int start_byte = next_seqno;
             next_seqno = start_byte + len;
+            
             sndpkt = make_packet(len);
             memcpy(sndpkt->data, buffer, len);
             sndpkt->hdr.seqno = start_byte;
-            insert_last(pktbuffer, sndpkt, next_seqno);         // insert the packet into the linked list
+            insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
+            // printf("New pkt: %d, Next Seq", start_byte);
         }
-    
+
         //Wait for ACK
         // do {
             struct node* head = get_head(pktbuffer);
@@ -218,14 +222,16 @@ int main (int argc, char **argv)
                     if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();
                 }
             }while(!move_window && recvpkt->hdr.ackno < next_seqno);    //ignore duplicate ACKs
+            // code might be stuck here
+
             stop_timer();
-            print_list(pktbuffer);
+            
             
             // if (move_window) break;
             /*resend pack if don't recv ACK */
         // } while(recvpkt->hdr.ackno != next_seqno);      
 
-        free(sndpkt);
+        // free(sndpkt);
     }
 
     return 0;

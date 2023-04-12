@@ -81,12 +81,12 @@ void print_list(linked_list* list) {
     struct node* current = head;
 
     if (head == NULL) {
-        printf("Empty List");
+        printf("Empty List\n");
         return;
     }
 
     while (current != NULL) {
-        printf("%d->", current->packet->hdr.seqno);
+        printf("%d:%d->", current->packet->hdr.seqno, current->key);
         current = current->next;
     }
     printf("NULL\n");
@@ -103,9 +103,9 @@ int isEmpty(linked_list* list) {
 void ack_pkt(linked_list* list, int ackno) {
     struct node* current = list->head;
 
-    while (current != NULL) {
+    while (current != NULL && current->key != ackno) {
         current->ack = 1;           // 1 means acked. Cumulatively acked
-        if (current->key == ackno) break;
+        // if (current->key == ackno) break;
         current = current->next;
     }
 }
