@@ -142,7 +142,7 @@ int main (int argc, char **argv)
         for (int i = 0; i < free_space; i++) {
 
             len = fread(buffer, 1, DATA_SIZE, fp);
-            printf("LEngth: %d\n", len);
+            // printf("LEngth: %d\n", len);
             if ( len <= 0)
             {
                 VLOG(INFO, "End Of File has been reached");
@@ -178,7 +178,7 @@ int main (int argc, char **argv)
             struct node* current = head;
 
             start_timer();
-            print_list(pktbuffer);
+            // print_list(pktbuffer);
 
             // skip already sent pkts
             for (int i = 0; i < pktbufferlength; i++) {

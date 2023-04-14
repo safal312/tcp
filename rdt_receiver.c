@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
         // this makes sure old, duplicate packets are not inserted
         if (recvpkt->hdr.seqno >= expected_seqno) {
             insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
-            print_list(pktbuffer);
+            // print_list(pktbuffer);
 
             struct node* current = pktbuffer->head;
 
