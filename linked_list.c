@@ -86,7 +86,7 @@ void print_list(linked_list* list) {
     }
 
     while (current != NULL) {
-        printf("%d:%d->", current->packet->hdr.seqno, current->key);
+        printf("%d->", current->packet->hdr.seqno);
         current = current->next;
     }
     printf("NULL\n");

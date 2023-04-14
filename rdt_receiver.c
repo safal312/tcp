@@ -25,6 +25,7 @@ tcp_packet *sndpkt;
 linked_list* pktbuffer;
 
 int expected_seqno = 0;     // do we need to randomize?
+int eof = 0;
 
 int main(int argc, char **argv) {
     linked_list* pktbuffer = (linked_list*) malloc(sizeof(linked_list));
@@ -98,14 +99,12 @@ int main(int argc, char **argv) {
                 (struct sockaddr *) &clientaddr, (socklen_t *)&clientlen) < 0) {
             error("ERROR in recvfrom");
         }
-        recvpkt = (tcp_packet *) buffer;
-        // if (!isEmpty(pktbuffer)) {
-        //     insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
-        // }
+        recvpkt = (tcp_packet*) malloc(sizeof(buffer));
+        memcpy(recvpkt, buffer, sizeof(buffer));
         
         assert(get_data_size(recvpkt) <= DATA_SIZE);
-        if ( recvpkt->hdr.data_size == 0) {
-            //VLOG(INFO, "End Of File has been reached");
+        if (eof && recvpkt->hdr.data_size == 0) {
+            VLOG(INFO, "End Of File has been reached");
             fclose(fp);
             break;
         }
@@ -117,10 +116,12 @@ int main(int argc, char **argv) {
         gettimeofday(&tp, NULL);
         VLOG(DEBUG, "%lu, %d, %d", tp.tv_sec, recvpkt->hdr.data_size, recvpkt->hdr.seqno);
         
-        insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
-        // print_list(pktbuffer);
+        // only insert when header seqno is >= expected
+        // this makes sure old, duplicate packets are not inserted
+        if (recvpkt->hdr.seqno >= expected_seqno) {
+            insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
+            print_list(pktbuffer);
 
-        if (recvpkt->hdr.seqno == expected_seqno) {
             struct node* current = pktbuffer->head;
 
             while (current != NULL) {
@@ -128,6 +129,11 @@ int main(int argc, char **argv) {
                 int next_seq = current->key + current->packet->hdr.data_size;
 
                 if (current->key == expected_seqno) {
+                    if (current->packet->hdr.data_size == 0) {
+                        eof = 1;
+                        // fclose(fp);
+                        break;
+                    }
                     fseek(fp, recvpkt->hdr.seqno, SEEK_SET);
                     fwrite(recvpkt->data, 1, recvpkt->hdr.data_size, fp);
                     remove_first(pktbuffer);
@@ -139,6 +145,8 @@ int main(int argc, char **argv) {
                 current = next_node;
             }
         }
+
+        printf("exp seq: %d\n",expected_seqno);
 
         // print_list(pktbuffer);
 

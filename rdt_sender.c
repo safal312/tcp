@@ -132,6 +132,7 @@ int main (int argc, char **argv)
 
     init_timer(RETRY, resend_packets);
     next_seqno = 0;
+    int start_byte = next_seqno;
 
     while (1)
     {   
@@ -141,23 +142,34 @@ int main (int argc, char **argv)
         for (int i = 0; i < free_space; i++) {
 
             len = fread(buffer, 1, DATA_SIZE, fp);
+            printf("LEngth: %d\n", len);
             if ( len <= 0)
             {
                 VLOG(INFO, "End Of File has been reached");
                 sndpkt = make_packet(0);
-                sendto(sockfd, sndpkt, TCP_HDR_SIZE,  0,
-                        (const struct sockaddr *)&serveraddr, serverlen);
-                return 0;
-                // break;
+                sndpkt->hdr.seqno = next_seqno;         // this is the last packet
+                
+                if (!isEmpty(pktbuffer)){
+                    insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
+                }
+                else {
+                    for (int i = 0; i < 5; i++) {
+                        sendto(sockfd, sndpkt, TCP_HDR_SIZE,  0,
+                            (const struct sockaddr *)&serveraddr, serverlen);
+                    }
+                    return 0;
+                }
+                
+                break;
             }
-            int start_byte = next_seqno;
+            start_byte = next_seqno;
             next_seqno = start_byte + len;
             
             sndpkt = make_packet(len);
             memcpy(sndpkt->data, buffer, len);
             sndpkt->hdr.seqno = start_byte;
-            insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
             // printf("New pkt: %d, Next Seq", start_byte);
+            insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
         }
 
         //Wait for ACK
@@ -219,7 +231,7 @@ int main (int argc, char **argv)
                     move_window = slide_acked(pktbuffer);       // slide window if possible
 
                     // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
-                    if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();
+                    if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();    
                 }
             }while(!move_window && recvpkt->hdr.ackno < next_seqno);    //ignore duplicate ACKs
             // code might be stuck here
