@@ -13,18 +13,12 @@
 #include "packet.h"
 #include "linked_list.h"
 
-/*
- * You are required to change the implementation to support
- * window size greater than one.
- * In the current implementation the window size is one, hence we have
- * only one send and receive packet
- */
 tcp_packet *recvpkt;
 tcp_packet *sndpkt;
 
 linked_list* pktbuffer;
 
-int expected_seqno = 0;     // do we need to randomize?
+int expected_seqno = 0;     // do we need to randomize? (task 2)
 int eof = 0;            // eof indicator
 
 int main(int argc, char **argv) {

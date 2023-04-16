@@ -185,70 +185,67 @@ int main (int argc, char **argv)
         }
 
         //Wait for ACK
-        // do {
-            struct node* head = get_head(pktbuffer);
-            struct node* current = head;
+        
+        struct node* head = get_head(pktbuffer);
+        struct node* current = head;
 
-            // start_timer();
-            // print_list(pktbuffer);
-
-            // skip already sent pkts
-            for (int i = 0; i < pktbufferlength; i++) {
-                current = current->next;
-            }
-            // printf("Timer val: %d\n", timer_running());
-            while (current != NULL) {
-                tcp_packet* cur_pkt = current->packet;
-                int cur_seq = cur_pkt->hdr.seqno;
-                VLOG(DEBUG, "Sending packet %d to %s", 
-                    cur_seq, inet_ntoa(serveraddr.sin_addr));
-                /*
-                * If the sendto is called for the first time, the system will
-                * will assign a random port number so that server can send its
-                * response to the src port.
-                */
+        // skip already sent pkts
+        for (int i = 0; i < pktbufferlength; i++) {
+            current = current->next;
+        }
+        // printf("Timer val: %d\n", timer_running());
+        while (current != NULL) {
+            tcp_packet* cur_pkt = current->packet;
+            int cur_seq = cur_pkt->hdr.seqno;
+            VLOG(DEBUG, "Sending packet %d to %s", cur_seq, inet_ntoa(serveraddr.sin_addr));
                 
-                // don't send pkts that are already sent
-                if(sendto(sockfd, cur_pkt, TCP_HDR_SIZE + get_data_size(cur_pkt), 0, 
-                            ( const struct sockaddr *)&serveraddr, serverlen) < 0)
-                {
-                    error("sendto");
-                }
+            /*
+            * If the sendto is called for the first time, the system will
+            * will assign a random port number so that server can send its
+            * response to the src port.
+            */
                 
-                if (!timer_running()) start_timer();
-
-                current = current->next;
-            }
-            
-            // variable to indicate if buffer window was moved or not
-            int move_window = 0;
-
-            do
+            // don't send pkts that are already sent
+            if(sendto(sockfd, cur_pkt, TCP_HDR_SIZE + get_data_size(cur_pkt), 0, 
+                        ( const struct sockaddr *)&serveraddr, serverlen) < 0)
             {
-                if(recvfrom(sockfd, buffer, MSS_SIZE, 0,
-                            (struct sockaddr *) &serveraddr, (socklen_t *)&serverlen) < 0)
-                {
-                    error("recvfrom");
-                }
-
-                recvpkt = (tcp_packet *)buffer;
-                // printf("%d \n", get_data_size(recvpkt));
-                printf("Acknowledgement Number: %d\n", recvpkt->hdr.ackno);
+                error("sendto");
+            }
                 
-                assert(get_data_size(recvpkt) <= DATA_SIZE);
+            if (!timer_running()) start_timer();
 
-                int ackno = recvpkt->hdr.ackno;
-                if (ackno == eof) return 0;
+            current = current->next;
+        }
+            
+        // variable to indicate if buffer window was moved or not
+        int move_window = 0;
 
-                if (ackno > send_base) {
-                    send_base = ackno;
-                    ack_pkt(pktbuffer, ackno);
-                    move_window = slide_acked(pktbuffer);       // slide window if possible
+        do
+        {
+            if(recvfrom(sockfd, buffer, MSS_SIZE, 0,
+                        (struct sockaddr *) &serveraddr, (socklen_t *)&serverlen) < 0)
+            {
+                error("recvfrom");
+            }
 
-                    // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
-                    if (pktbuffer->head != NULL) start_timer();
-                }
-            }while(!move_window);    //ignore duplicate ACKs
+            recvpkt = (tcp_packet *)buffer;
+            // printf("%d \n", get_data_size(recvpkt));
+            printf("Acknowledgement Number: %d\n", recvpkt->hdr.ackno);
+                
+            assert(get_data_size(recvpkt) <= DATA_SIZE);
+
+            int ackno = recvpkt->hdr.ackno;
+            if (ackno == eof) return 0;
+
+            if (ackno > send_base) {
+                send_base = ackno;
+                ack_pkt(pktbuffer, ackno);
+                move_window = slide_acked(pktbuffer);       // slide window if possible
+
+                // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
+                if (pktbuffer->head != NULL) start_timer();
+            }
+        }while(!move_window);    //ignore duplicate ACKs
 
             // stop_timer();
     }
