@@ -134,8 +134,9 @@ int main(int argc, char **argv) {
                         // fclose(fp);
                         break;
                     }
-                    fseek(fp, recvpkt->hdr.seqno, SEEK_SET);
-                    fwrite(recvpkt->data, 1, recvpkt->hdr.data_size, fp);
+                    // changed from recvpkt to current
+                    fseek(fp, current->packet->hdr.seqno, SEEK_SET);
+                    fwrite(current->packet->data, 1, current->packet->hdr.data_size, fp);
                     remove_first(pktbuffer);
                 } else {
                     break;

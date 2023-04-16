@@ -233,7 +233,7 @@ int main (int argc, char **argv)
                     // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
                     if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();    
                 }
-            }while(!move_window && recvpkt->hdr.ackno < next_seqno);    //ignore duplicate ACKs
+            }while(!move_window);    //ignore duplicate ACKs
             // code might be stuck here
 
             stop_timer();
