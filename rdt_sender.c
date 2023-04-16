@@ -82,6 +82,25 @@ void init_timer(int delay, void (*sig_handler)(int))
 }
 
 
+int timer_running()
+{
+    struct itimerval current_timer;
+    if (getitimer(ITIMER_REAL, &current_timer) == -1) {
+        perror("getitimer");
+        exit(1);
+    }
+
+    if (current_timer.it_value.tv_sec == 0 && current_timer.it_value.tv_usec == 0) {
+        // printf("Timer is not running.\n");
+        return 0;
+    } else {
+        // printf("Timer is running.\n");
+        return 1;
+    }
+}
+
+
+
 int main (int argc, char **argv)
 {
     // linked list to store packets
@@ -170,14 +189,14 @@ int main (int argc, char **argv)
             struct node* head = get_head(pktbuffer);
             struct node* current = head;
 
-            start_timer();
+            // start_timer();
             // print_list(pktbuffer);
 
             // skip already sent pkts
             for (int i = 0; i < pktbufferlength; i++) {
                 current = current->next;
             }
-
+            // printf("Timer val: %d\n", timer_running());
             while (current != NULL) {
                 tcp_packet* cur_pkt = current->packet;
                 int cur_seq = cur_pkt->hdr.seqno;
@@ -195,6 +214,9 @@ int main (int argc, char **argv)
                 {
                     error("sendto");
                 }
+                
+                if (!timer_running()) start_timer();
+
                 current = current->next;
             }
             
@@ -224,11 +246,11 @@ int main (int argc, char **argv)
                     move_window = slide_acked(pktbuffer);       // slide window if possible
 
                     // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
-                    if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();    
+                    if (pktbuffer->head != NULL) start_timer();
                 }
             }while(!move_window);    //ignore duplicate ACKs
 
-            stop_timer();
+            // stop_timer();
     }
 
     return 0;
