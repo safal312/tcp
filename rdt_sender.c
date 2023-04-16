@@ -29,12 +29,10 @@ tcp_packet *sndpkt;
 tcp_packet *recvpkt;
 sigset_t sigmask;       
 
-linked_list* pktbuffer;
+linked_list* pktbuffer;             // buffer to store packets in buffer
 
+// end of file indicator
 int eof = -1;
-
-// struct node* head = NULL;
-// struct node* tail = NULL;
 
 void resend_packets(int sig)
 {
@@ -139,11 +137,11 @@ int main (int argc, char **argv)
     {   
         int pktbufferlength = get_length(pktbuffer);
         int free_space = MAX_WINDOW - pktbufferlength;
-        // printf("Next seq no: %d\n", next_seqno);
+        
         for (int i = 0; i < free_space; i++) {
 
             len = fread(buffer, 1, DATA_SIZE, fp);
-            // printf("LEngth: %d\n", len);
+            
             if ( len <= 0)
             {
                 VLOG(INFO, "End Of File has been reached");
@@ -152,20 +150,8 @@ int main (int argc, char **argv)
                 eof = next_seqno;
 
                 for (int i = 0; i < 5; i++) {
-                    // sendto(sockfd, sndpkt, TCP_HDR_SIZE,  0,
-                    //     (const struct sockaddr *)&serveraddr, serverlen);
                     insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
                 }
-                
-                // if (!isEmpty(pktbuffer)){
-                //     insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
-                // }
-                // else {
-                //     for (int i = 0; i < 5; i++) {
-                //         sendto(sockfd, sndpkt, TCP_HDR_SIZE,  0,
-                //             (const struct sockaddr *)&serveraddr, serverlen);
-                //     }
-                // }
                 
                 break;
             }
@@ -175,7 +161,7 @@ int main (int argc, char **argv)
             sndpkt = make_packet(len);
             memcpy(sndpkt->data, buffer, len);
             sndpkt->hdr.seqno = start_byte;
-            // printf("New pkt: %d, Next Seq", start_byte);
+            
             insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
         }
 
@@ -211,10 +197,8 @@ int main (int argc, char **argv)
                 }
                 current = current->next;
             }
-
-            //ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
-            //struct sockaddr *src_addr, socklen_t *addrlen);
             
+            // variable to indicate if buffer window was moved or not
             int move_window = 0;
 
             do
@@ -243,16 +227,8 @@ int main (int argc, char **argv)
                     if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();    
                 }
             }while(!move_window);    //ignore duplicate ACKs
-            // code might be stuck here
 
             stop_timer();
-            
-            
-            // if (move_window) break;
-            /*resend pack if don't recv ACK */
-        // } while(recvpkt->hdr.ackno != next_seqno);      
-
-        // free(sndpkt);
     }
 
     return 0;

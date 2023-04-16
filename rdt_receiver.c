@@ -25,7 +25,7 @@ tcp_packet *sndpkt;
 linked_list* pktbuffer;
 
 int expected_seqno = 0;     // do we need to randomize?
-int eof = 0;
+int eof = 0;            // eof indicator
 
 int main(int argc, char **argv) {
     linked_list* pktbuffer = (linked_list*) malloc(sizeof(linked_list));
@@ -103,11 +103,6 @@ int main(int argc, char **argv) {
         memcpy(recvpkt, buffer, sizeof(buffer));
         
         assert(get_data_size(recvpkt) <= DATA_SIZE);
-        if (eof && recvpkt->hdr.data_size == 0) {
-            VLOG(INFO, "End Of File has been reached");
-            fclose(fp);
-            break;
-        }
 
         /* 
          * sendto: ACK back to the client 
@@ -118,7 +113,7 @@ int main(int argc, char **argv) {
         
         // only insert when header seqno is >= expected
         // this makes sure old, duplicate packets are not inserted
-        if (recvpkt->hdr.seqno >= expected_seqno) {
+        if (!eof && recvpkt->hdr.seqno >= expected_seqno) {
             insert_seq(pktbuffer, recvpkt, recvpkt->hdr.seqno);
             // print_list(pktbuffer);
 
@@ -131,7 +126,8 @@ int main(int argc, char **argv) {
                 if (current->key == expected_seqno) {
                     if (current->packet->hdr.data_size == 0) {
                         eof = 1;
-                        // fclose(fp);
+                        VLOG(INFO, "End Of File has been reached");
+                        fclose(fp);
                         break;
                     }
                     // changed from recvpkt to current
@@ -147,9 +143,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        printf("exp seq: %d\n",expected_seqno);
-
-        // print_list(pktbuffer);
+        // printf("exp seq: %d\n",expected_seqno);
 
         sndpkt = make_packet(0);
         

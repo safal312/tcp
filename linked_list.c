@@ -28,7 +28,8 @@ void insert_seq(linked_list* list, tcp_packet* packet, int seq_num) {
     struct node* prev = current;
     // struct node* current = current->next;
     while (current != NULL) {
-        if (current->key >= seq_num) {
+        if (current->key == seq_num) return;
+        if (current->key > seq_num) {
             new_node->next = current;
             if (current == list->head) {
                 list->head = new_node;
