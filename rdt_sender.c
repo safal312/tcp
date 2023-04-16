@@ -102,7 +102,7 @@ int main (int argc, char **argv)
     }
     hostname = argv[1];
     portno = atoi(argv[2]);
-    fp = fopen(argv[3], "r");
+    fp = fopen(argv[3], "rb");
     if (fp == NULL) {
         error(argv[3]);
     }
