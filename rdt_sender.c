@@ -31,6 +31,7 @@ sigset_t sigmask;
 
 linked_list* pktbuffer;
 
+int eof = -1;
 
 // struct node* head = NULL;
 // struct node* tail = NULL;
@@ -148,17 +149,23 @@ int main (int argc, char **argv)
                 VLOG(INFO, "End Of File has been reached");
                 sndpkt = make_packet(0);
                 sndpkt->hdr.seqno = next_seqno;         // this is the last packet
-                
-                if (!isEmpty(pktbuffer)){
+                eof = next_seqno;
+
+                for (int i = 0; i < 5; i++) {
+                    // sendto(sockfd, sndpkt, TCP_HDR_SIZE,  0,
+                    //     (const struct sockaddr *)&serveraddr, serverlen);
                     insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
                 }
-                else {
-                    for (int i = 0; i < 5; i++) {
-                        sendto(sockfd, sndpkt, TCP_HDR_SIZE,  0,
-                            (const struct sockaddr *)&serveraddr, serverlen);
-                    }
-                    return 0;
-                }
+                
+                // if (!isEmpty(pktbuffer)){
+                //     insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
+                // }
+                // else {
+                //     for (int i = 0; i < 5; i++) {
+                //         sendto(sockfd, sndpkt, TCP_HDR_SIZE,  0,
+                //             (const struct sockaddr *)&serveraddr, serverlen);
+                //     }
+                // }
                 
                 break;
             }
@@ -225,6 +232,8 @@ int main (int argc, char **argv)
                 assert(get_data_size(recvpkt) <= DATA_SIZE);
 
                 int ackno = recvpkt->hdr.ackno;
+                if (ackno == eof) return 0;
+
                 if (ackno > send_base) {
                     send_base = ackno;
                     ack_pkt(pktbuffer, ackno);
