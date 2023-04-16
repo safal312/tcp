@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
                 (struct sockaddr *) &clientaddr, (socklen_t *)&clientlen) < 0) {
             error("ERROR in recvfrom");
         }
-        recvpkt = (tcp_packet*) malloc(sizeof(buffer));
+        recvpkt = (tcp_packet*) malloc(sizeof(tcp_packet));
         memcpy(recvpkt, buffer, sizeof(buffer));
         
         assert(get_data_size(recvpkt) <= DATA_SIZE);

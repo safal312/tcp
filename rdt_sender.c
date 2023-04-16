@@ -210,9 +210,11 @@ int main (int argc, char **argv)
             
             int move_window = 0;
 
+            recvpkt = (tcp_packet*) malloc(sizeof(tcp_packet));
+
             do
             {
-                if(recvfrom(sockfd, buffer, MSS_SIZE, 0,
+                if(recvfrom(sockfd, recvpkt, MSS_SIZE, 0,
                             (struct sockaddr *) &serveraddr, (socklen_t *)&serverlen) < 0)
                 {
                     error("recvfrom");
@@ -233,7 +235,7 @@ int main (int argc, char **argv)
                     // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
                     if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();    
                 }
-            }while(!move_window && recvpkt->hdr.ackno < next_seqno);    //ignore duplicate ACKs
+            }while(!move_window && recvpkt->hdr.ackno > send_base);    //ignore duplicate ACKs
             // code might be stuck here
 
             stop_timer();
