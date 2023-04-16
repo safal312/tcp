@@ -210,11 +210,11 @@ int main (int argc, char **argv)
             
             int move_window = 0;
 
-            recvpkt = (tcp_packet*) malloc(sizeof(tcp_packet));
+            // recvpkt = (tcp_packet*) malloc(sizeof(tcp_packet));
 
             do
             {
-                if(recvfrom(sockfd, recvpkt, MSS_SIZE, 0,
+                if(recvfrom(sockfd, buffer, MSS_SIZE, 0,
                             (struct sockaddr *) &serveraddr, (socklen_t *)&serverlen) < 0)
                 {
                     error("recvfrom");
