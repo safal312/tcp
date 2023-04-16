@@ -12,14 +12,17 @@ You can test using these network conditions (run sender in these conditions) and
 
 ### Test 1
 **Network condition:** mm-delay 30 mm-loss downlink 0.6
+
 **Transfer file:** numbers.txt (4.5 MB)
 
 ### Test 2
 **Network condition:** mm-delay 50 mm-loss uplink 0.6
+
 **Transfer file:** file.pdf (1 MB)
 
 ### Test 3
 **Network condition:** mm-delay 20 mm-link --meter-all ./channel_traces/cellular ./channel_traces/rapid
+
 **Transfer file:** file.mp4 (17.8 MB)
 
 ### In all of tests:
