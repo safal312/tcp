@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     }
     portno = atoi(argv[1]);
 
-    fp  = fopen(argv[2], "w");
+    fp  = fopen(argv[2], "wb");
     if (fp == NULL) {
         error(argv[2]);
     }

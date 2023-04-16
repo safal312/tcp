@@ -101,7 +101,7 @@ int main (int argc, char **argv)
     }
     hostname = argv[1];
     portno = atoi(argv[2]);
-    fp = fopen(argv[3], "r");
+    fp = fopen(argv[3], "rb");
     if (fp == NULL) {
         error(argv[3]);
     }
@@ -210,6 +210,8 @@ int main (int argc, char **argv)
             
             int move_window = 0;
 
+            // recvpkt = (tcp_packet*) malloc(sizeof(tcp_packet));
+
             do
             {
                 if(recvfrom(sockfd, buffer, MSS_SIZE, 0,
@@ -233,7 +235,7 @@ int main (int argc, char **argv)
                     // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
                     if (pktbuffer->head != NULL && pktbuffer->head->ack != 1) start_timer();    
                 }
-            }while(!move_window && recvpkt->hdr.ackno < next_seqno);    //ignore duplicate ACKs
+            }while(!move_window && recvpkt->hdr.ackno > send_base);    //ignore duplicate ACKs
             // code might be stuck here
 
             stop_timer();
