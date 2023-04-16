@@ -1,5 +1,6 @@
 ### Test Sender side command:
 `mm-delay 5 mm-loss uplink 0.2 mm-loss downlink 0.5`
+
 `./obj/rdt_sender $MAHIMAHI_BASE 5454 sample.txt`
 
 ### Test Receiver side command:
