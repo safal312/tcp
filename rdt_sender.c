@@ -10,6 +10,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <assert.h>
+#include <limits.h>
 
 #include"packet.h"
 #include"common.h"
@@ -18,9 +19,14 @@
 #define STDIN_FD    0
 #define RETRY  120 //millisecond
 
+int SLOW_START = 1;
+int CONGESTION_AVOIDANCE = 0;
+
 int next_seqno=0;
 int send_base=0;
 int MAX_WINDOW = 10;       // changed from 1 to 10
+float cwnd = 1;
+int ssthresh = 64;
 
 int sockfd, serverlen;
 struct sockaddr_in serveraddr;
@@ -34,8 +40,16 @@ linked_list* pktbuffer;             // buffer to store packets in buffer
 // end of file indicator
 int eof = -1;
 
+int get_max_cwnd(int cwnd_val) {
+    return cwnd_val < 2 ? 2 : cwnd_val;
+}
+
 void resend_packets(int sig)
 {
+    ssthresh = get_max_cwnd(cwnd / 2);
+    cwnd = 1;
+    SLOW_START = 1;
+    CONGESTION_AVOIDANCE = 0;
     if (sig == SIGALRM)
     {
         //Resend all packets range between 
@@ -155,7 +169,7 @@ int main (int argc, char **argv)
     while (1)
     {   
         int pktbufferlength = get_length(pktbuffer);
-        int free_space = MAX_WINDOW - pktbufferlength;
+        int free_space = cwnd - pktbufferlength;
         
         for (int i = 0; i < free_space; i++) {
 
@@ -163,10 +177,12 @@ int main (int argc, char **argv)
             
             if ( len <= 0)
             {
+                if (eof != -1) break;           // to avoid adding the last byte multiple times in subsequent loops
                 VLOG(INFO, "End Of File has been reached");
                 sndpkt = make_packet(0);
                 sndpkt->hdr.seqno = next_seqno;         // this is the last packet
                 eof = next_seqno;
+
 
                 for (int i = 0; i < 5; i++) {
                     insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
@@ -184,6 +200,7 @@ int main (int argc, char **argv)
             insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
         }
 
+        print_list(pktbuffer);
         //Wait for ACK
         
         struct node* head = get_head(pktbuffer);
@@ -193,8 +210,11 @@ int main (int argc, char **argv)
         for (int i = 0; i < pktbufferlength; i++) {
             current = current->next;
         }
-        // printf("Timer val: %d\n", timer_running());
+
+        // counter to check that we're only sending cwnd packets
+        int counter = 0;
         while (current != NULL) {
+            if (counter >= cwnd) break;             // break after sending cwnd packets
             tcp_packet* cur_pkt = current->packet;
             int cur_seq = cur_pkt->hdr.seqno;
             VLOG(DEBUG, "Sending packet %d to %s", cur_seq, inet_ntoa(serveraddr.sin_addr));
@@ -215,17 +235,33 @@ int main (int argc, char **argv)
             if (!timer_running()) start_timer();
 
             current = current->next;
+            counter += 1;
         }
             
         // variable to indicate if buffer window was moved or not
         int move_window = 0;
+        int DUP_ACKS = 0;
 
+        // print_list(pktbuffer);
         do
         {
+            printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
+            printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
+            if (DUP_ACKS == 3) resend_packets(SIGALRM);
             if(recvfrom(sockfd, buffer, MSS_SIZE, 0,
                         (struct sockaddr *) &serveraddr, (socklen_t *)&serverlen) < 0)
             {
                 error("recvfrom");
+            }
+
+            if (SLOW_START) {
+                cwnd += 1;
+                if (cwnd >= ssthresh) {
+                    SLOW_START = 0;
+                    CONGESTION_AVOIDANCE = 1;
+                }
+            } else if (CONGESTION_AVOIDANCE) {
+                cwnd += 1.0 / (int) cwnd;
             }
 
             recvpkt = (tcp_packet *)buffer;
@@ -245,6 +281,7 @@ int main (int argc, char **argv)
                 // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
                 if (pktbuffer->head != NULL) start_timer();
             }
+            DUP_ACKS += 1;
         }while(!move_window);    //ignore duplicate ACKs
 
             // stop_timer();
