@@ -243,11 +243,18 @@ int main (int argc, char **argv)
         int DUP_ACKS = 0;
 
         // print_list(pktbuffer);
+        // this loop waits for the lowest packet to be acked before moving forward
+        // this can cause delays in sending packets in delay situations
+        // when a packet is acked out of order, we'll have to wait for the lowest pkt to be received although cwnd is increased
+        // we can't send another packet unless we get out of the loop
         do
         {
             printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
             printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
-            if (DUP_ACKS == 3) resend_packets(SIGALRM);
+            if (DUP_ACKS == 3) {
+                DUP_ACKS = 0;
+                resend_packets(SIGALRM);
+            }
             if(recvfrom(sockfd, buffer, MSS_SIZE, 0,
                         (struct sockaddr *) &serveraddr, (socklen_t *)&serverlen) < 0)
             {
