@@ -17,7 +17,7 @@
 #include"linked_list.h"
 
 #define STDIN_FD    0
-#define RETRY  120 //millisecond
+#define RETRY  1000 //millisecond
 
 int SLOW_START = 1;
 int CONGESTION_AVOIDANCE = 0;
@@ -27,6 +27,7 @@ int send_base=0;
 int MAX_WINDOW = 10;       // changed from 1 to 10
 float cwnd = 1;
 int ssthresh = 64;
+int shift_after_ack = 0;      // keep track of number of packets acked
 
 int sockfd, serverlen;
 struct sockaddr_in serveraddr;
@@ -36,6 +37,8 @@ tcp_packet *recvpkt;
 sigset_t sigmask;       
 
 linked_list* pktbuffer;             // buffer to store packets in buffer
+// struct timeval tp;
+struct timespec tp;
 
 // end of file indicator
 int eof = -1;
@@ -113,7 +116,10 @@ int timer_running()
     }
 }
 
-
+double get_timestamp(struct timespec tp) {
+    double timestamp = tp.tv_sec * 1000000000 + tp.tv_nsec;
+    return timestamp / 1000000.0;
+}
 
 int main (int argc, char **argv)
 {
@@ -170,22 +176,29 @@ int main (int argc, char **argv)
     {   
         int pktbufferlength = get_length(pktbuffer);
         int free_space = cwnd - pktbufferlength;
+        // int free_space = cwnd - acked_packets;
+
+        printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
+        printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
         
+        // new packets are only added when cwnd is greater than packets in the buffer
         for (int i = 0; i < free_space; i++) {
 
             len = fread(buffer, 1, DATA_SIZE, fp);
-            
+            // gettimeofday(&tp, NULL);
+            clock_gettime(CLOCK_MONOTONIC, &tp);
+
             if ( len <= 0)
             {
                 if (eof != -1) break;           // to avoid adding the last byte multiple times in subsequent loops
                 VLOG(INFO, "End Of File has been reached");
                 sndpkt = make_packet(0);
                 sndpkt->hdr.seqno = next_seqno;         // this is the last packet
+                
                 eof = next_seqno;
 
-
                 for (int i = 0; i < 5; i++) {
-                    insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
+                    insert_last(pktbuffer, sndpkt, start_byte, get_timestamp(tp));         // insert the packet into the linked list
                 }
                 
                 break;
@@ -197,22 +210,30 @@ int main (int argc, char **argv)
             memcpy(sndpkt->data, buffer, len);
             sndpkt->hdr.seqno = start_byte;
             
-            insert_last(pktbuffer, sndpkt, start_byte);         // insert the packet into the linked list
+            insert_last(pktbuffer, sndpkt, start_byte, get_timestamp(tp));         // insert the packet into the linked list
         }
 
+        // printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
+        // printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
         print_list(pktbuffer);
         //Wait for ACK
         
         struct node* head = get_head(pktbuffer);
         struct node* current = head;
 
-        // skip already sent pkts
-        for (int i = 0; i < pktbufferlength; i++) {
-            current = current->next;
+        // skip already sent pkts in normal scenario
+        // on fast retransmit or timeout, cwnd will go down to one
+
+        for (int i = 0; i < shift_after_ack; i++) {
+            current = current->next;            // causing segmentation fault
+            if (current == NULL) break;
         }
 
         // counter to check that we're only sending cwnd packets
-        int counter = 0;
+        int counter = shift_after_ack;
+        if (shift_after_ack > cwnd) counter = 0;        // in scenarios where old cwnd is larger than current cwnd
+                                                        // its possible that lot of pkts in the old window were acked
+
         while (current != NULL) {
             if (counter >= cwnd) break;             // break after sending cwnd packets
             tcp_packet* cur_pkt = current->packet;
@@ -247,12 +268,18 @@ int main (int argc, char **argv)
         // this can cause delays in sending packets in delay situations
         // when a packet is acked out of order, we'll have to wait for the lowest pkt to be received although cwnd is increased
         // we can't send another packet unless we get out of the loop
+        
+        shift_after_ack = 0;
+        int old_cwnd = cwnd;
+        int acked_pkts = 0;
+
         do
         {
-            printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
-            printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
+            // printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
+            // printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
             if (DUP_ACKS == 3) {
                 DUP_ACKS = 0;
+                printf("FAST RETRANSMIT\n");
                 resend_packets(SIGALRM);
             }
             if(recvfrom(sockfd, buffer, MSS_SIZE, 0,
@@ -273,7 +300,7 @@ int main (int argc, char **argv)
 
             recvpkt = (tcp_packet *)buffer;
             // printf("%d \n", get_data_size(recvpkt));
-            printf("Acknowledgement Number: %d\n", recvpkt->hdr.ackno);
+            printf("Acknowledgement Number: %d, %d\n", recvpkt->hdr.ackno, recvpkt->hdr.seqno);
                 
             assert(get_data_size(recvpkt) <= DATA_SIZE);
 
@@ -281,8 +308,13 @@ int main (int argc, char **argv)
             if (ackno == eof) return 0;
 
             if (ackno > send_base) {
+                clock_gettime(CLOCK_MONOTONIC, &tp);
+                
                 send_base = ackno;
-                ack_pkt(pktbuffer, ackno);
+                acked_pkts = ack_pkt(pktbuffer, ackno);
+                double rtt_val = get_rtt(pktbuffer, recvpkt->hdr.seqno, get_timestamp(tp));
+                printf("RTT: %f\n", rtt_val);       // use this in formula
+                
                 move_window = slide_acked(pktbuffer);       // slide window if possible
 
                 // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
@@ -291,7 +323,8 @@ int main (int argc, char **argv)
             DUP_ACKS += 1;
         }while(!move_window);    //ignore duplicate ACKs
 
-            // stop_timer();
+        shift_after_ack = old_cwnd - acked_pkts;
+        shift_after_ack = shift_after_ack < 0 ? 0 : shift_after_ack;
     }
 
     return 0;

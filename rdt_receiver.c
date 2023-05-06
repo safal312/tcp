@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
         // printf("exp seq: %d\n",expected_seqno);
 
         sndpkt = make_packet(0);
-        
+        sndpkt->hdr.seqno = recvpkt->hdr.seqno;
         sndpkt->hdr.ackno = expected_seqno;
         sndpkt->hdr.ctr_flags = ACK;
         if (sendto(sockfd, sndpkt, TCP_HDR_SIZE, 0, 

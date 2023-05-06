@@ -47,11 +47,13 @@ void insert_seq(linked_list* list, tcp_packet* packet, int seq_num) {
     list->tail = new_node;
 }
 
-void insert_last(linked_list* list, tcp_packet* packet, int seq_num) {
+void insert_last(linked_list* list, tcp_packet* packet, int seq_num, double timestamp) {
     struct node* new_node = (struct node*) malloc(sizeof(struct node));
     new_node->packet = packet;
     new_node->key = seq_num;
     new_node->ack = 0;
+    new_node->timestamp = timestamp;
+
     new_node->next = NULL;
 
     if (list->head == NULL) {
@@ -87,7 +89,7 @@ void print_list(linked_list* list) {
     }
 
     while (current != NULL) {
-        printf("%d->", current->packet->hdr.seqno);
+        printf("%d:%f->", current->packet->hdr.seqno, current->timestamp);
         current = current->next;
     }
     printf("NULL\n");
@@ -101,14 +103,31 @@ int isEmpty(linked_list* list) {
     return list->head == NULL ? 1 : 0;
 }
 
-void ack_pkt(linked_list* list, int ackno) {
+int ack_pkt(linked_list* list, int ackno) {
     struct node* current = list->head;
+    int count = 0;
 
     while (current != NULL && current->key != ackno) {
         current->ack = 1;           // 1 means acked. Cumulatively acked
         // if (current->key == ackno) break;
         current = current->next;
+        count += 1;
     }
+
+    return count;
+}
+
+double get_rtt(linked_list* list, int seqno, double timestamp) {
+    struct node* current = list->head;
+
+    while (current != NULL) {
+        if (current->key == seqno) {
+            return (timestamp - current->timestamp) ;
+        }
+        current = current->next;
+    }
+
+    return 0;
 }
 
 int slide_acked(linked_list* list) {
