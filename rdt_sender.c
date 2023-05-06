@@ -17,7 +17,7 @@
 #include"linked_list.h"
 
 #define STDIN_FD    0
-#define RETRY  1000 //millisecond
+#define RETRY  120 //millisecond
 
 int SLOW_START = 1;
 int CONGESTION_AVOIDANCE = 0;
@@ -224,6 +224,7 @@ int main (int argc, char **argv)
         // skip already sent pkts in normal scenario
         // on fast retransmit or timeout, cwnd will go down to one
 
+        
         for (int i = 0; i < shift_after_ack; i++) {
             current = current->next;            // causing segmentation fault
             if (current == NULL) break;
@@ -231,8 +232,6 @@ int main (int argc, char **argv)
 
         // counter to check that we're only sending cwnd packets
         int counter = shift_after_ack;
-        if (shift_after_ack > cwnd) counter = 0;        // in scenarios where old cwnd is larger than current cwnd
-                                                        // its possible that lot of pkts in the old window were acked
 
         while (current != NULL) {
             if (counter >= cwnd) break;             // break after sending cwnd packets
@@ -313,7 +312,11 @@ int main (int argc, char **argv)
                 send_base = ackno;
                 acked_pkts = ack_pkt(pktbuffer, ackno);
                 double rtt_val = get_rtt(pktbuffer, recvpkt->hdr.seqno, get_timestamp(tp));
-                printf("RTT: %f\n", rtt_val);       // use this in formula
+                // rtt_val is zero if rtt was calculated previously, so that check is required.
+                // only print rtt if not zero
+                if (rtt_val) {
+                    printf("RTT: %f\n", rtt_val);       // use this in formula
+                }
                 
                 move_window = slide_acked(pktbuffer);       // slide window if possible
 
@@ -325,6 +328,8 @@ int main (int argc, char **argv)
 
         shift_after_ack = old_cwnd - acked_pkts;
         shift_after_ack = shift_after_ack < 0 ? 0 : shift_after_ack;
+        if (shift_after_ack > cwnd) shift_after_ack = 0;        // in scenarios where old cwnd is larger than current cwnd
+                                                        // its possible that lot of pkts in the old window were acked
     }
 
     return 0;

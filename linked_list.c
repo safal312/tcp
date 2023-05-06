@@ -121,8 +121,11 @@ double get_rtt(linked_list* list, int seqno, double timestamp) {
     struct node* current = list->head;
 
     while (current != NULL) {
+        if (current->timestamp == 0) return 0;      // timestamp is set to zero once rtt is calculated, so that we don't calculate again.
         if (current->key == seqno) {
-            return (timestamp - current->timestamp) ;
+            double rtt = timestamp - current->timestamp;
+            current->timestamp = 0;
+            return rtt;
         }
         current = current->next;
     }
