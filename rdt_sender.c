@@ -40,6 +40,8 @@ linked_list* pktbuffer;             // buffer to store packets in buffer
 // struct timeval tp;
 struct timespec tp;
 
+FILE* csv;
+
 // end of file indicator
 int eof = -1;
 
@@ -166,6 +168,12 @@ int main (int argc, char **argv)
 
     assert(MSS_SIZE - TCP_HDR_SIZE > 0);
 
+    csv = fopen("CWND.csv", "w");
+    if (csv == NULL) {
+		printf("Error opening csv\n");
+		return 1;
+    }
+
     //Stop and wait protocol
 
     init_timer(RETRY, resend_packets);
@@ -180,6 +188,9 @@ int main (int argc, char **argv)
 
         printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
         printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
+        // print out initial value
+        clock_gettime(CLOCK_MONOTONIC, &tp);
+        fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
         
         // new packets are only added when cwnd is greater than packets in the buffer
         for (int i = 0; i < free_space; i++) {
@@ -286,7 +297,7 @@ int main (int argc, char **argv)
             {
                 error("recvfrom");
             }
-
+            
             if (SLOW_START) {
                 cwnd += 1;
                 if (cwnd >= ssthresh) {
@@ -296,6 +307,9 @@ int main (int argc, char **argv)
             } else if (CONGESTION_AVOIDANCE) {
                 cwnd += 1.0 / (int) cwnd;
             }
+            // print after every ack when which is when cwnd changes
+            clock_gettime(CLOCK_MONOTONIC, &tp);
+            fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
 
             recvpkt = (tcp_packet *)buffer;
             // printf("%d \n", get_data_size(recvpkt));
@@ -330,6 +344,8 @@ int main (int argc, char **argv)
         shift_after_ack = shift_after_ack < 0 ? 0 : shift_after_ack;
         if (shift_after_ack > cwnd) shift_after_ack = 0;        // in scenarios where old cwnd is larger than current cwnd
                                                         // its possible that lot of pkts in the old window were acked
+                                                        // so shift_after_ack will be larger than cwnd
+                                                        // in such instance, we won't shift any pkt from new window, so value is 0
     }
 
     return 0;
