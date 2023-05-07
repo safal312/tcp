@@ -49,7 +49,6 @@ double estimatedRTT = 0.0;
 double devRTT = 0.0;
 int exp_backoff = 1; // exponential backoff factor
 
-
 FILE* csv;
 
 // end of file indicator
@@ -207,16 +206,15 @@ int main (int argc, char **argv)
     // print out initial value
     // clock_gettime(CLOCK_MONOTONIC, &tp);
     // fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
-  
 
     while (1)
     {   
         int pktbufferlength = get_length(pktbuffer);
         int free_space = cwnd - pktbufferlength;
-        // int free_space = cwnd - acked_packets;
 
         printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
         printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
+        printf("RTO VAL: %f\n", rto);
         // print out initial value
         
         // new packets are only added when cwnd is greater than packets in the buffer
@@ -253,7 +251,7 @@ int main (int argc, char **argv)
 
         // printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
         // printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
-        print_list(pktbuffer);
+        // print_list(pktbuffer);
         //Wait for ACK
         
         struct node* head = get_head(pktbuffer);
@@ -261,7 +259,6 @@ int main (int argc, char **argv)
 
         // skip already sent pkts in normal scenario
         // on fast retransmit or timeout, cwnd will go down to one
-
         
         for (int i = 0; i < shift_after_ack; i++) {
             current = current->next;            // causing segmentation fault
@@ -357,11 +354,9 @@ int main (int argc, char **argv)
                 // rtt_val is zero if rtt was (not?) calculated previously, so that check is required.
                 // only print rtt if not zero
                 if (rtt_val) {
-                    printf("RTT: %f\n", rtt_val);       // use this in formula
+                    // printf("RTT: %f\n", rtt_val);       // use this in formula
                     reset_rto(rtt_val);
                 }
-                
-                
 
                 move_window = slide_acked(pktbuffer);       // slide window if possible
 
