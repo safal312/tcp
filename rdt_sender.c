@@ -136,7 +136,7 @@ void reset_rto(double rtt_val){
     estimatedRTT = ((1.0 - (double) ALPHA) * estimatedRTT + (double) ALPHA * sampleRTT);
     devRTT = ((1.0 - (double) BETA) * devRTT + (double) BETA * abs(sampleRTT - estimatedRTT));
     rto = MAX(floor(estimatedRTT + 4 * devRTT), 1);
-    
+
     init_timer(rto, resend_packets);
 }
 
@@ -346,9 +346,11 @@ int main (int argc, char **argv)
                 // rtt_val is zero if rtt was (not?) calculated previously, so that check is required.
                 // only print rtt if not zero
                 if (rtt_val) {
+                    printf("RTT: %f\n", rtt_val);       // use this in formula
                     reset_rto(rtt_val);
-                    // printf("RTT: %f\n", rtt_val);       // use this in formula
                 }
+                
+                
 
                 move_window = slide_acked(pktbuffer);       // slide window if possible
 
