@@ -346,10 +346,9 @@ int main (int argc, char **argv)
                 // rtt_val is zero if rtt was (not?) calculated previously, so that check is required.
                 // only print rtt if not zero
                 if (rtt_val) {
-                    printf("RTT: %f\n", rtt_val);       // use this in formula
+                    reset_rto(rtt_val);
+                    // printf("RTT: %f\n", rtt_val);       // use this in formula
                 }
-                
-                reset_rto(rtt_val);
 
                 move_window = slide_acked(pktbuffer);       // slide window if possible
 
