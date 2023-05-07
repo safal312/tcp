@@ -18,7 +18,7 @@
 #include"linked_list.h"
 
 #define STDIN_FD    0
-#define RETRY  180 //millisecond
+#define RETRY  3000 //millisecond
 #define ALPHA 0.125 // for estimatedRTT
 #define BETA 0.25 // for devRTT
 
@@ -43,23 +43,35 @@ linked_list* pktbuffer;             // buffer to store packets in buffer
 // struct timeval tp;
 struct timespec tp;
 double rto = RETRY; // rto time initialised with RETRY value
-double max_rto = 14400.0;
+double max_rto = 5 * 1000.0;    // 5 should be 240
 double sampleRTT = 0.0; 
 double estimatedRTT = 0.0; 
 double devRTT = 0.0;
-int exp_backoff = 1; // exponential backoff factor
+int count_timeouts = 0;
 
 FILE* csv;
 
 // end of file indicator
 int eof = -1;
 
+void init_timer(int delay, void (*sig_handler)(int));
+void resend_packets(int sig);
+void start_timer();
+void stop_timer();
+
 int get_max_cwnd(int cwnd_val) {
     return cwnd_val < 2 ? 2 : cwnd_val;
 }
 
+void reinitialize_timer(double rto) {
+    init_timer((int) rto, resend_packets);
+    stop_timer();
+    start_timer();
+}
+
 void resend_packets(int sig)
 {
+    count_timeouts += 1;
     ssthresh = get_max_cwnd(cwnd / 2);
     cwnd = 1;
     SLOW_START = 1;
@@ -68,13 +80,20 @@ void resend_packets(int sig)
     {
         //Resend all packets range between 
         //sendBase and nextSeqNum
-        VLOG(INFO, "Timout happend");
+        VLOG(INFO, "Timeout happend");
         tcp_packet* smallest_seq_pkt = get_head(pktbuffer)->packet;
         if(sendto(sockfd, smallest_seq_pkt, TCP_HDR_SIZE + get_data_size(smallest_seq_pkt), 0, 
                     ( const struct sockaddr *)&serveraddr, serverlen) < 0)
         {
             error("sendto");
         }
+    }
+
+    if (count_timeouts >= 2) {
+        printf("EXPONENTIAL BACKOFF\n");
+        rto = fmin(rto*2, max_rto);
+        reinitialize_timer(rto);
+        // init_timer((int) rto, resend_packets);
     }
 }
 
@@ -109,7 +128,6 @@ void init_timer(int delay, void (*sig_handler)(int))
     sigaddset(&sigmask, SIGALRM);
 }
 
-
 int timer_running()
 {
     struct itimerval current_timer;
@@ -137,10 +155,12 @@ void reset_rto(double rtt_val){
     sampleRTT = rtt_val;
     estimatedRTT = ((1.0 - (double) ALPHA) * estimatedRTT + (double) ALPHA * sampleRTT);
     devRTT = ((1.0 - (double) BETA) * devRTT + (double) BETA * abs(sampleRTT - estimatedRTT));
-    rto = estimatedRTT + 4 * devRTT;
+    rto = fmin(estimatedRTT + 4 * devRTT, max_rto);
     // Apply exponential backoff if necessary
-    exp_backoff = fmin(exp_backoff * 2, max_rto / rto); // so that rto * exp_backoff won't ever exceed max_rto
-    init_timer(rto * exp_backoff, resend_packets);
+
+    reinitialize_timer(rto);
+    // init_timer((int) rto, resend_packets);
+    // stop_timer();
 }
 
 int main (int argc, char **argv)
@@ -177,7 +197,7 @@ int main (int argc, char **argv)
     serverlen = sizeof(serveraddr);
 
     /* covert host into network byte order */
-    if (inet_aton(hostname, &serveraddr.sin_addr) == 0) {
+    if (inet_aton(hostname, &serveraddr.sin_addr)  == 0) {
         fprintf(stderr,"ERROR, invalid host %s\n", hostname);
         exit(0);
     }
@@ -196,7 +216,7 @@ int main (int argc, char **argv)
 
     //Stop and wait protocol
 
-    init_timer(rto * exp_backoff, resend_packets);
+    init_timer((int) rto, resend_packets);
     next_seqno = 0;
     int start_byte = next_seqno;
 
@@ -206,6 +226,7 @@ int main (int argc, char **argv)
     // print out initial value
     // clock_gettime(CLOCK_MONOTONIC, &tp);
     // fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
+    printf("Start Timer running? %d\n", timer_running());
 
     while (1)
     {   
@@ -246,7 +267,7 @@ int main (int argc, char **argv)
             memcpy(sndpkt->data, buffer, len);
             sndpkt->hdr.seqno = start_byte;
             
-            insert_last(pktbuffer, sndpkt, start_byte, get_timestamp(tp));         // insert the packet into the linked list
+            insert_last(pktbuffer, sndpkt, start_byte, 0);         // insert the packet into the linked list
         }
 
         // printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
@@ -270,6 +291,9 @@ int main (int argc, char **argv)
 
         while (current != NULL) {
             if (counter >= cwnd) break;             // break after sending cwnd packets
+            clock_gettime(CLOCK_MONOTONIC, &tp);
+
+            current->timestamp = get_timestamp(tp);
             tcp_packet* cur_pkt = current->packet;
             int cur_seq = cur_pkt->hdr.seqno;
             VLOG(DEBUG, "Sending packet %d to %s", cur_seq, inet_ntoa(serveraddr.sin_addr));
@@ -302,13 +326,15 @@ int main (int argc, char **argv)
         // this can cause delays in sending packets in delay situations
         // when a packet is acked out of order, we'll have to wait for the lowest pkt to be received although cwnd is increased
         // we can't send another packet unless we get out of the loop
-        
+        clock_gettime(CLOCK_MONOTONIC, &tp);
         shift_after_ack = 0;
         int old_cwnd = cwnd;
         int acked_pkts = 0;
 
         do
         {
+            // printf("Waiting for ACK\n");
+            // printf("Timer running? %d\n", timer_running());
             // printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
             // printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
             if (DUP_ACKS == 3) {
@@ -339,25 +365,30 @@ int main (int argc, char **argv)
             recvpkt = (tcp_packet *)buffer;
             // printf("%d \n", get_data_size(recvpkt));
             printf("Acknowledgement Number: %d, %d\n", recvpkt->hdr.ackno, recvpkt->hdr.seqno);
-                
+            
+            clock_gettime(CLOCK_MONOTONIC, &tp);
+            double rtt_val = get_rtt(pktbuffer, recvpkt->hdr.seqno, get_timestamp(tp));
+            // rtt_val is zero if rtt was (not?) calculated previously, so that check is required.
+            // only print rtt if not zero
+            // putting rtt_val here will ignore all packets that come out of order
+            if (rtt_val) {
+                printf("RTT: %f\n", rtt_val / 1000.0);       // use this in formula
+                reset_rto(rtt_val);
+            }
+
+            printf("RTO: %f & New Timer Interval: %ld\n", rto, timer.it_interval.tv_sec);
+
             assert(get_data_size(recvpkt) <= DATA_SIZE);
 
             int ackno = recvpkt->hdr.ackno;
             if (ackno == eof) return 0;
 
             if (ackno > send_base) {
-                clock_gettime(CLOCK_MONOTONIC, &tp);
+                count_timeouts = 0;     // when ackno > send_base, it the receiver got the smallest pkt in buffer, so we reset the timeout counts
                 
                 send_base = ackno;
                 acked_pkts = ack_pkt(pktbuffer, ackno);
-                double rtt_val = get_rtt(pktbuffer, recvpkt->hdr.seqno, get_timestamp(tp));
-                // rtt_val is zero if rtt was (not?) calculated previously, so that check is required.
-                // only print rtt if not zero
-                if (rtt_val) {
-                    // printf("RTT: %f\n", rtt_val);       // use this in formula
-                    reset_rto(rtt_val);
-                }
-
+                
                 move_window = slide_acked(pktbuffer);       // slide window if possible
 
                 // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
@@ -372,6 +403,7 @@ int main (int argc, char **argv)
                                                         // its possible that lot of pkts in the old window were acked
                                                         // so shift_after_ack will be larger than cwnd
                                                         // in such instance, we won't shift any pkt from new window, so value is 0
+
         // print after every ack when which is when cwnd changes
         // clock_gettime(CLOCK_MONOTONIC, &tp);
         // fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
