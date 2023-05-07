@@ -198,6 +198,9 @@ int main (int argc, char **argv)
     next_seqno = 0;
     int start_byte = next_seqno;
 
+    // clock_gettime(CLOCK_MONOTONIC, &tp);
+    // fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
+
     while (1)
     {   
         int pktbufferlength = get_length(pktbuffer);
@@ -207,8 +210,6 @@ int main (int argc, char **argv)
         printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
         printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
         // print out initial value
-        clock_gettime(CLOCK_MONOTONIC, &tp);
-        fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
         
         // new packets are only added when cwnd is greater than packets in the buffer
         for (int i = 0; i < free_space; i++) {
@@ -316,6 +317,9 @@ int main (int argc, char **argv)
                 error("recvfrom");
             }
             
+            // print after every ack when which is when cwnd changes
+            clock_gettime(CLOCK_MONOTONIC, &tp);
+            fprintf(csv, "%f,%f,%d\n", get_timestamp(tp) / 1000.0, cwnd, ssthresh);
             if (SLOW_START) {
                 cwnd += 1;
                 if (cwnd >= ssthresh) {
@@ -325,9 +329,7 @@ int main (int argc, char **argv)
             } else if (CONGESTION_AVOIDANCE) {
                 cwnd += 1.0 / (int) cwnd;
             }
-            // print after every ack when which is when cwnd changes
-            clock_gettime(CLOCK_MONOTONIC, &tp);
-            fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
+            
 
             recvpkt = (tcp_packet *)buffer;
             // printf("%d \n", get_data_size(recvpkt));
@@ -367,6 +369,9 @@ int main (int argc, char **argv)
                                                         // its possible that lot of pkts in the old window were acked
                                                         // so shift_after_ack will be larger than cwnd
                                                         // in such instance, we won't shift any pkt from new window, so value is 0
+        // print after every ack when which is when cwnd changes
+        // clock_gettime(CLOCK_MONOTONIC, &tp);
+        // fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
     }
 
     return 0;
