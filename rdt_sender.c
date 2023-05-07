@@ -201,6 +201,11 @@ int main (int argc, char **argv)
     next_seqno = 0;
     int start_byte = next_seqno;
 
+    // print out initial value
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+    fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
+        
+
     while (1)
     {   
         int pktbufferlength = get_length(pktbuffer);
@@ -209,9 +214,6 @@ int main (int argc, char **argv)
 
         printf("CWND VALUE: %f SSTHRESH: %d\n", cwnd, ssthresh);
         printf("SLOW_START %d, CONGESTION AVOIDANCE %d\n", SLOW_START, CONGESTION_AVOIDANCE);
-        // print out initial value
-        clock_gettime(CLOCK_MONOTONIC, &tp);
-        fprintf(csv, "%f,%f,%d\n", get_timestamp(tp), cwnd, ssthresh);
         
         // new packets are only added when cwnd is greater than packets in the buffer
         for (int i = 0; i < free_space; i++) {
