@@ -42,10 +42,12 @@ sigset_t sigmask;
 linked_list* pktbuffer;             // buffer to store packets in buffer
 // struct timeval tp;
 struct timespec tp;
-unsigned long rto = RETRY; // rto time initialised with RETRY value
+double rto = RETRY; // rto time initialised with RETRY value
+double max_rto = 14400.0;
 double sampleRTT = 0.0; 
 double estimatedRTT = 0.0; 
-double devRTT = 0.0; 
+double devRTT = 0.0;
+int exp_backoff = 1; // exponential backoff factor
 
 
 FILE* csv;
@@ -137,8 +139,9 @@ void reset_rto(double rtt_val){
     estimatedRTT = ((1.0 - (double) ALPHA) * estimatedRTT + (double) ALPHA * sampleRTT);
     devRTT = ((1.0 - (double) BETA) * devRTT + (double) BETA * abs(sampleRTT - estimatedRTT));
     rto = estimatedRTT + 4 * devRTT;
-
-    init_timer(rto, resend_packets);
+    // Apply exponential backoff if necessary
+    exp_backoff = fmin(exp_backoff * 2, max_rto / rto); // so that rto * exp_backoff won't ever exceed max_rto
+    init_timer(rto * exp_backoff, resend_packets);
 }
 
 int main (int argc, char **argv)
@@ -194,7 +197,7 @@ int main (int argc, char **argv)
 
     //Stop and wait protocol
 
-    init_timer(rto, resend_packets);
+    init_timer(rto * exp_backoff, resend_packets);
     next_seqno = 0;
     int start_byte = next_seqno;
 
