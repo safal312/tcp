@@ -18,6 +18,8 @@
 
 #define STDIN_FD    0
 #define RETRY  120 //millisecond
+#define ALPHA 0.125 // for estimatedRTT
+#define BETA 0.25 // for devRTT
 
 int SLOW_START = 1;
 int CONGESTION_AVOIDANCE = 0;
@@ -39,6 +41,11 @@ sigset_t sigmask;
 linked_list* pktbuffer;             // buffer to store packets in buffer
 // struct timeval tp;
 struct timespec tp;
+unsigned long rto = RETRY; // rto time initialised with RETRY value
+double sampleRTT = 0.0; 
+double estimatedRTT = 0.0; 
+double devRTT = 0.0; 
+
 
 FILE* csv;
 
@@ -123,6 +130,16 @@ double get_timestamp(struct timespec tp) {
     return timestamp / 1000000.0;
 }
 
+//reset rto based on rtt value and reset timer
+void reset_rto(double rtt_val){
+    sampleRTT = rtt_val;
+    estimatedRTT = ((1.0 - (double) ALPHA) * estimatedRTT + (double) ALPHA * sampleRTT);
+    devRTT = ((1.0 - (double) BETA) * devRTT + (double) BETA * abs(sampleRTT - estimatedRTT));
+    rto = MAX(floor(estimatedRTT + 4 * devRTT), 1);
+    
+    init_timer(rto, resend_packets);
+}
+
 int main (int argc, char **argv)
 {
     // linked list to store packets
@@ -176,7 +193,7 @@ int main (int argc, char **argv)
 
     //Stop and wait protocol
 
-    init_timer(RETRY, resend_packets);
+    init_timer(rto, resend_packets);
     next_seqno = 0;
     int start_byte = next_seqno;
 
@@ -326,12 +343,14 @@ int main (int argc, char **argv)
                 send_base = ackno;
                 acked_pkts = ack_pkt(pktbuffer, ackno);
                 double rtt_val = get_rtt(pktbuffer, recvpkt->hdr.seqno, get_timestamp(tp));
-                // rtt_val is zero if rtt was calculated previously, so that check is required.
+                // rtt_val is zero if rtt was (not?) calculated previously, so that check is required.
                 // only print rtt if not zero
                 if (rtt_val) {
                     printf("RTT: %f\n", rtt_val);       // use this in formula
                 }
                 
+                reset_rto(rtt_val);
+
                 move_window = slide_acked(pktbuffer);       // slide window if possible
 
                 // pktbuffer->head != NULL: this case is for when the whole buffer gets acked
