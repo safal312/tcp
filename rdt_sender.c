@@ -18,7 +18,7 @@
 #include"linked_list.h"
 
 #define STDIN_FD    0
-#define RETRY  120 //millisecond
+#define RETRY  180 //millisecond
 #define ALPHA 0.125 // for estimatedRTT
 #define BETA 0.25 // for devRTT
 
