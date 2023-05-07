@@ -11,6 +11,7 @@
 #include <time.h>
 #include <assert.h>
 #include <limits.h>
+#include <math.h>
 
 #include"packet.h"
 #include"common.h"
@@ -135,7 +136,7 @@ void reset_rto(double rtt_val){
     sampleRTT = rtt_val;
     estimatedRTT = ((1.0 - (double) ALPHA) * estimatedRTT + (double) ALPHA * sampleRTT);
     devRTT = ((1.0 - (double) BETA) * devRTT + (double) BETA * abs(sampleRTT - estimatedRTT));
-    rto = MAX(floor(estimatedRTT + 4 * devRTT), 1);
+    rto = estimatedRTT + 4 * devRTT;
 
     init_timer(rto, resend_packets);
 }
