@@ -44,7 +44,7 @@ sigset_t sigmask;
 linked_list* pktbuffer;             // buffer to store packets in buffer
 struct timespec tp;                 // to get current time
 double rto = RETRY;                 // rto time initialised with RETRY value
-double max_rto = 2 * 1000.0;      // upperbound for rto
+double max_rto = 240 * 1000.0;      // upperbound for rto
 double sampleRTT = 0.0; 
 double estimatedRTT = 0.0; 
 double devRTT = 0.0;
