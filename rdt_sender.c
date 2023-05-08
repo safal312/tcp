@@ -335,8 +335,10 @@ int main (int argc, char **argv)
             double rtt_val = get_rtt(pktbuffer, recvpkt->hdr.seqno, get_timestamp(tp));
 
             // rtt_val is set to zero if rtt was calculated previously, so that check is required.
-            if (rtt_val) reset_rto(rtt_val);
-
+            if (rtt_val) {
+                // don't calculate rto for resent packet
+                if (count_timeouts == 0) reset_rto(rtt_val);
+            }
             assert(get_data_size(recvpkt) <= DATA_SIZE);
 
             int ackno = recvpkt->hdr.ackno;
