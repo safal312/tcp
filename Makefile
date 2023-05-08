@@ -9,7 +9,7 @@ CFLAGS = -Wall -I.
 
 LINKER = gcc -o
 # linking flags here
-LFLAGS   = -Wall
+LFLAGS   = -Wall -lm
 
 OBJDIR = ./obj
 
@@ -27,11 +27,11 @@ TARGET:	$(OBJDIR) $(CLIENT)	$(SERVER)
 
 
 $(CLIENT):	$(CLIENT_OBJECTS)
-	$(LINKER)  $@  $(CLIENT_OBJECTS)
+	$(LINKER)  $@  $(CLIENT_OBJECTS) $(LFLAGS)
 	@echo "Link complete!"
 
 $(SERVER): $(SERVER_OBJECTS)
-	$(LINKER)  $@  $(SERVER_OBJECTS)
+	$(LINKER)  $@  $(SERVER_OBJECTS) $(LFLAGS)
 	@echo "Link complete!"
 
 $(OBJDIR)/%.o:	%.c common.h packet.h linked_list.h

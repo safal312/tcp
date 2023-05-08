@@ -7,6 +7,7 @@ struct node {
     int key;
     int ack;
     tcp_packet* packet;
+    double timestamp;
     struct node* next;
 };
 
@@ -19,14 +20,15 @@ typedef struct linked_list {
 // extern struct node* tail;
 
 void insert_seq(linked_list* list, tcp_packet* packet, int seq_num);
-void insert_last(linked_list* list, tcp_packet* packet, int seq_num);
+void insert_last(linked_list* list, tcp_packet* packet, int seq_num, double timestamp);
 void remove_first(linked_list* list);
 void print_list(linked_list* list);
 struct node* get_head(linked_list* list);
 void test_list(linked_list* pktbuffer);
 int isEmpty(linked_list* list);
 int get_length(linked_list* list);
-void ack_pkt(linked_list* list, int ackno);
+int ack_pkt(linked_list* list, int ackno);
 int slide_acked(linked_list* list);
+double get_rtt(linked_list* list, int ackno, double timestamp);
 
 #endif
